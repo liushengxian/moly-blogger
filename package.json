@@ -1,0 +1,28 @@
+{
+  "name": "moly-blogger",
+  "version": "1.0.0",
+  "description": "blogger for github pages, for moly",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/liushengxian/moly-blogger.git"
+  },
+  "keywords": [
+    "blogger",
+    "github",
+    "pages"
+  ],
+  "author": "shawn.liu",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/liushengxian/moly-blogger/issues"
+  },
+  "homepage": "https://github.com/liushengxian/moly-blogger#readme",
+  "devDependencies": {
+    "electron": "^33.0.2"
+  }
+}

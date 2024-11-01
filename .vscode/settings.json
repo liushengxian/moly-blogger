@@ -1,0 +1,6 @@
+{
+    "editor.autoIndent": "advanced",
+    "editor.formatOnSave": true,
+    "editor.indentSize": "tabSize",
+    "editor.tabSize": 2
+}
