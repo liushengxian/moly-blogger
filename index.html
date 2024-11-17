@@ -1,41 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" /> -->
-  <!-- <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" /> -->
-  <title>Hello from Electron renderer!</title>
-  <!-- Include stylesheet -->
-  <link href="./static/bulma.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    <meta charset="UTF-8"/>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" /> -->
+    <!-- <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" /> -->
+    <title>Moly blogger</title>
+    <!-- Include stylesheet -->
+    <link href="./static/bulma.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet"/>
 </head>
 
 <body>
-  <h1>Hello from Electron renderer!</h1>
-  <p>👋</p>
-  <p id="info"></p>
-  <!-- Create the editor container -->
-  <div id="editor" style="min-height: 600px;">
-    <p>Hello World!</p>
-    <p>Some initial <strong>bold</strong> text</p>
-    <p><br /></p>
-  </div>
-
-  <div>
-    <div class="buttons">
-      <button class="button is-primary">Primary</button>
-      <button class="button is-link">Link</button>
+<div class="container is-max-desktop">
+    <h1>👋Hello from Moly!</h1>
+    <nav class="level">
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Tweets</p>
+                <p class="title">3,456</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Following</p>
+                <p class="title">123</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Followers</p>
+                <p class="title">456K</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Likes</p>
+                <p class="title">789</p>
+            </div>
+        </div>
+    </nav>
+    <p id="info"></p>
+    <!-- Create the editor container -->
+    <div id="editor" style="min-height: 600px;">
+        <p>Hello World!</p>
+        <p>Some initial <strong>bold</strong> text</p>
+        <p><br/></p>
     </div>
+    <div>
+        <div class="buttons mt-3">
+            <button class="button is-primary">Publish</button>
+            <!--      <button class="button is-link">Link</button>-->
+        </div>
 
-    <div class="buttons">
-      <button class="button is-info">Info</button>
-      <button class="button is-success">Success</button>
-      <button class="button is-warning">Warning</button>
-      <button class="button is-danger">Danger</button>
+        <!--    <div class="buttons">-->
+        <!--      <button class="button is-info">Info</button>-->
+        <!--      <button class="button is-success">Success</button>-->
+        <!--      <button class="button is-warning">Warning</button>-->
+        <!--      <button class="button is-danger">Danger</button>-->
+        <!--    </div>-->
     </div>
-  </div>
+</div>
 
 </body>
 <script src="./renderer.js"></script>
@@ -46,9 +72,9 @@
 
 <!-- Initialize Quill editor -->
 <script>
-  const quill = new Quill('#editor', {
-    theme: 'snow'
-  });
+    const quill = new Quill('#editor', {
+        theme: 'snow'
+    });
 </script>
 
 </html>

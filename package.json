@@ -36,6 +36,7 @@
     "electron": "^33.0.2"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-squirrel-startup": "^1.0.1",
+    "octokit": "^4.0.2"
   }
 }
