@@ -2,11 +2,14 @@ const { app, BrowserWindow, ipcMain, Menu, protocol, dialog } = require('electro
 const path = require('path')
 require('dotenv').config()
 const isDev = process.env.NODE_ENV === 'development'
+const DatabaseService = require('./src/services/database')
+const fs = require('fs')
 
 // Use environment variable for CLIENT_ID
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID
 let authData = null
 let mainWindow = null
+const db = new DatabaseService()
 
 // Validate required environment variables
 if (!CLIENT_ID) {
@@ -184,6 +187,64 @@ app.whenReady().then(() => {
     return {
       success: false,
       path: null
+    }
+  })
+
+  ipcMain.handle('database:addWorkspace', async (_, path) => {
+    try {
+      const result = db.addWorkspace(path)
+      return { success: true, result }
+    } catch (error) {
+      console.error('Failed to add workspace:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('database:getWorkspaces', async () => {
+    try {
+      const workspaces = db.getWorkspaces()
+      return { success: true, workspaces }
+    } catch (error) {
+      console.error('Failed to get workspaces:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('database:createPost', async (_, title, content, workspacePath) => {
+    try {
+      const result = db.createPost(title, content, workspacePath)
+      return { success: true, result }
+    } catch (error) {
+      console.error('Failed to create post:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('workspace:readDir', async (_, folderPath) => {
+    try {
+      const items = await fs.promises.readdir(folderPath, { withFileTypes: true })
+      return {
+        success: true,
+        items: items.map(item => ({
+          name: item.name,
+          path: path.join(folderPath, item.name),
+          isDirectory: item.isDirectory(),
+          isFile: item.isFile()
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to read directory:', error)
+      return { success: false, error: error.message }
+    }
+  })
+
+  ipcMain.handle('workspace:readFile', async (_, filePath) => {
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8')
+      return { success: true, content }
+    } catch (error) {
+      console.error('Failed to read file:', error)
+      return { success: false, error: error.message }
     }
   })
 

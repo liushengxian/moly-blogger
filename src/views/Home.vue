@@ -23,9 +23,9 @@
       </div>
 
       <!-- Show selected workspace if exists -->
-      <div v-if="workspacePath" class="notification is-info is-light mt-3">
-        <button class="delete" @click="workspacePath = ''"></button>
-        Current workspace: <strong>{{ workspacePath }}</strong>
+      <div v-if="$store.getters['workspace/workspacePath']" class="notification is-info is-light mt-3">
+        <button class="delete" @click="$store.dispatch('workspace/setWorkspacePath', '')"></button>
+        Current workspace: <strong>{{ $store.getters['workspace/workspacePath'] }}</strong>
       </div>
     </div>
 
@@ -50,12 +50,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import MarkdownEditor from '../components/MarkdownEditor.vue'
 
+const store = useStore()
 const editor = ref(null)
 const initialContent = "# Welcome to Moly Blogger\n\nStart writing your blog post here..."
 const username = ref('')
-const workspacePath = ref('')
 
 const handleEditorChange = (content) => {
   console.log('Content changed:', content)
@@ -74,9 +75,7 @@ const openWorkspace = async () => {
   try {
     const result = await window.workspace.openFolder()
     if (result.success) {
-      workspacePath.value = result.path
-      // You might want to store this in some persistent storage
-      console.log('Selected workspace:', result.path)
+      store.dispatch('workspace/setWorkspacePath', result.path)
     }
   } catch (error) {
     console.error('Failed to open workspace:', error)

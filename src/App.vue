@@ -1,19 +1,32 @@
 <template>
   <div class="app-container">
-    <!-- Left Sidebar Navigation -->
+    <!-- Left Sidebar Navigation (hidden on welcome page) -->
     <transition name="slide">
-      <Navbar v-if="showNavbar" @hide-navbar="toggleNavbar" />
+      <Navbar 
+        v-if="showNavbar && $route.name !== 'Welcome'" 
+        @hide-navbar="toggleNavbar" 
+      />
     </transition>
 
-    <!-- Toggle button when navbar is hidden -->
-    <button v-if="!showNavbar" class="button is-small navbar-toggle" @click="toggleNavbar" aria-label="Show navigation">
+    <!-- Toggle button when navbar is hidden (hidden on welcome page) -->
+    <button 
+      v-if="!showNavbar && $route.name !== 'Welcome'" 
+      class="button is-small navbar-toggle"
+      @click="toggleNavbar"
+      aria-label="Show navigation">
       <span class="icon">
         <i class="fas fa-bars"></i>
       </span>
     </button>
 
     <!-- Main Content Area -->
-    <main class="main-content" :class="{ 'full-width': !showNavbar }">
+    <main 
+      class="main-content" 
+      :class="{ 
+        'full-width': !showNavbar || $route.name === 'Welcome',
+        'welcome-page': $route.name === 'Welcome'
+      }"
+    >
       <div class="container">
         <router-view></router-view>
       </div>
@@ -88,5 +101,11 @@ const toggleNavbar = () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+.welcome-page {
+  padding: 0;
+  margin: 0;
+  max-width: none;
 }
 </style>

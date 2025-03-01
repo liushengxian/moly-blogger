@@ -1,64 +1,91 @@
 <template>
   <aside class="menu sidebar">
     <div class="sidebar-header">
-      <p class="menu-label">Moly Blogger</p>
-      <button class="button is-small is-ghost hide-button" @click="$emit('hide-navbar')" aria-label="Hide navigation">
+      <p class="menu-label">{{ workspaceName }}</p>
+      <button 
+        class="button is-small is-ghost hide-button" 
+        @click="$emit('hide-navbar')"
+        aria-label="Hide navigation">
         <span class="icon">
           <i class="fas fa-chevron-left"></i>
         </span>
       </button>
     </div>
 
-    <ul class="menu-list">
-      <li>
-        <router-link to="/" :class="{ 'is-active': $route.path === '/' }">
-          <span class="icon-text">
-            <span class="icon">
-              <i class="fas fa-home"></i>
-            </span>
-            <span>Home</span>
-          </span>
-        </router-link>
-      </li>
-      <li>
-        <router-link to="/editor" :class="{ 'is-active': $route.path === '/editor' }">
-          <span class="icon-text">
-            <span class="icon">
-              <i class="fas fa-pen"></i>
-            </span>
-            <span>Editor</span>
-          </span>
-        </router-link>
-      </li>
-      <li>
-        <router-link to="/settings" :class="{ 'is-active': $route.path === '/settings' }">
-          <span class="icon-text">
-            <span class="icon">
-              <i class="fas fa-cog"></i>
-            </span>
-            <span>Settings</span>
-          </span>
-        </router-link>
-      </li>
-    </ul>
-
-    <div class="sidebar-footer">
-      <div class="user-profile">
-        <GitHubLogin />
+    <!-- Workspace Explorer -->
+    <div class="workspace-explorer">
+      <div v-if="!workspacePath" class="no-workspace">
+        <p class="has-text-grey">No workspace selected</p>
       </div>
+      <div v-else>
+        <div class="file-tree">
+          <template v-for="item in fileTree" :key="item.path">
+            <FileTreeItem 
+              :item="item" 
+              :current-file="currentFile"
+              @select="handleFileSelect" 
+            />
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings at Bottom -->
+    <div class="sidebar-footer">
       <p class="version-info">{{ versionInfo }}</p>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import GitHubLogin from './GitHubLogin.vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useStore } from 'vuex'
+import path from 'path'
+import FileTreeItem from './FileTreeItem.vue'
 
+const store = useStore()
 const versionInfo = ref('')
+const fileTree = ref([])
+
+const workspacePath = computed(() => store.getters['workspace/workspacePath'])
+const currentFile = computed(() => store.getters['workspace/currentFile'])
+const workspaceName = computed(() => 
+  workspacePath.value ? path.basename(workspacePath.value) : 'Moly Blogger'
+)
+
+const loadWorkspaceFiles = async () => {
+  if (!workspacePath.value) return
+  
+  const result = await window.workspace.readDir(workspacePath.value)
+  if (result.success) {
+    fileTree.value = result.items.sort((a, b) => {
+      // Directories first, then files
+      if (a.isDirectory !== b.isDirectory) {
+        return a.isDirectory ? -1 : 1
+      }
+      // Then alphabetically
+      return a.name.localeCompare(b.name)
+    })
+  }
+}
+
+const handleFileSelect = async (filePath) => {
+  if (await window.workspace.isMarkdown(filePath)) {
+    const result = await window.workspace.readFile(filePath)
+    if (result.success) {
+      store.dispatch('workspace/openFile', {
+        path: filePath,
+        content: result.content
+      })
+    }
+  }
+}
+
+watch(() => workspacePath.value, loadWorkspaceFiles, { immediate: true })
 
 onMounted(() => {
   versionInfo.value = `v${versions.electron()}`
+  loadWorkspaceFiles()
 })
 
 defineEmits(['hide-navbar'])
@@ -92,10 +119,14 @@ defineEmits(['hide-navbar'])
 .hide-button {
   padding: 0.25rem;
   color: #666;
+  background: transparent;
+  border: none;
+  transition: all 0.2s ease;
 }
 
 .hide-button:hover {
   color: #485fc7;
+  background-color: rgba(72, 95, 199, 0.1);
 }
 
 .menu-list a {
@@ -103,10 +134,22 @@ defineEmits(['hide-navbar'])
   align-items: center;
   padding: 0.75rem;
   border-radius: 6px;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.menu-list a:hover {
+  background-color: rgba(72, 95, 199, 0.1);
+  color: #485fc7;
 }
 
 .menu-list a.is-active {
   background-color: #485fc7;
+  color: white;
+}
+
+.menu-list a.is-active:hover {
+  background-color: #3e55b9;
   color: white;
 }
 
@@ -128,5 +171,6 @@ defineEmits(['hide-navbar'])
   font-size: 0.8rem;
   color: #666;
   text-align: center;
+  margin-top: 1rem;
 }
 </style>
