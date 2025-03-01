@@ -50,7 +50,20 @@
     "@codemirror/state": "6.4.1",
     "@codemirror/view": "6.24.1",
     "@octokit/auth-oauth-device": "^7.1.3",
+    "dotenv": "^16.4.7",
     "electron-squirrel-startup": "^1.0.1",
-    "octokit": "^4.0.2"
+    "octokit": "^4.0.2",
+    "vue-router": "^4.5.0",
+    "concurrently": "^8.2.2"
+  },
+  "build": {
+    "protocols": [
+      {
+        "name": "Moly Blogger Protocol",
+        "schemes": [
+          "moly-blogger"
+        ]
+      }
+    ]
   }
 }

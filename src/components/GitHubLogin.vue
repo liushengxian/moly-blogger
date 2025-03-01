@@ -21,6 +21,20 @@ const isLoggedIn = ref(false)
 const username = ref('')
 const userAvatar = ref('')
 
+const handleOAuthCallback = async (data) => {
+  if (data.code) {
+    // Handle the OAuth code
+    console.log('Received OAuth code:', data.code)
+    // You can now use this code to get the access token
+    const result = await window.github.login(data.code)
+    if (result.success) {
+      isLoggedIn.value = true
+      username.value = result.username
+      userAvatar.value = result.avatar
+    }
+  }
+}
+
 const login = async () => {
   try {
     const result = await window.github.login()
@@ -42,6 +56,10 @@ const logout = async () => {
 }
 
 onMounted(async () => {
+  // Register OAuth callback handler
+  window.github.onOAuthCallback(handleOAuthCallback)
+
+  // Check initial auth status
   const status = await window.github.checkAuth()
   if (status.isLoggedIn) {
     isLoggedIn.value = true

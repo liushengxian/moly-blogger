@@ -11,5 +11,13 @@ contextBridge.exposeInMainWorld('versions', {
 contextBridge.exposeInMainWorld('github', {
   login: () => ipcRenderer.invoke('github:login'),
   logout: () => ipcRenderer.invoke('github:logout'),
-  checkAuth: () => ipcRenderer.invoke('github:checkAuth')
+  checkAuth: () => ipcRenderer.invoke('github:checkAuth'),
+  onOAuthCallback: (callback) => {
+    ipcRenderer.on('github:oauth-callback', (event, data) => callback(data))
+  }
+})
+
+// Add workspace API
+contextBridge.exposeInMainWorld('workspace', {
+  openFolder: () => ipcRenderer.invoke('workspace:openFolder')
 })

@@ -8,6 +8,16 @@ export default defineConfig({
   root: path.resolve(__dirname, 'src'),
   build: {
     outDir: path.resolve(__dirname, 'dist'),
-    emptyOutDir: true
+    emptyOutDir: true,
+    watch: {
+      include: 'src/**'
+    }
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+    watch: {
+      usePolling: true
+    }
   }
 }) 

@@ -1,16 +1,66 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron')
-const { createOAuthDeviceAuth } = require("@octokit/auth-oauth-device")
+const { app, BrowserWindow, ipcMain, Menu, protocol, dialog } = require('electron')
 const path = require('path')
+require('dotenv').config()
 const isDev = process.env.NODE_ENV === 'development'
 
-console.log(path.join(__dirname, 'preload.js'))
-
-// Add these at the top of your file
-const CLIENT_ID = 'YOUR_GITHUB_CLIENT_ID'
+// Use environment variable for CLIENT_ID
+const CLIENT_ID = process.env.GITHUB_CLIENT_ID
 let authData = null
+let mainWindow = null
+
+// Validate required environment variables
+if (!CLIENT_ID) {
+  console.error('Missing GITHUB_CLIENT_ID environment variable')
+  app.quit()
+}
+
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient('moly-blogger', process.execPath, [path.resolve(process.argv[1])])
+  }
+} else {
+  app.setAsDefaultProtocolClient('moly-blogger')
+}
+
+// Handle the protocol on macOS
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  handleUrl(url)
+})
+
+function handleUrl(url) {
+  const urlObj = new URL(url)
+  if (urlObj.protocol === 'moly-blogger:' && urlObj.hostname === 'login') {
+    // Extract any parameters from the URL if needed
+    const params = new URLSearchParams(urlObj.search)
+    const code = params.get('code')
+    if (code && mainWindow) {
+      mainWindow.webContents.send('github:oauth-callback', { code })
+    }
+  }
+}
+
+// Add this function to watch for file changes
+function watchForChanges(win) {
+  if (isDev) {
+    // Watch the dist directory for changes
+    require('fs').watch(path.join(__dirname, 'dist'), (eventType, filename) => {
+      if (filename) {
+        // Debounce the reload to prevent multiple reloads
+        if (win && win.webContents) {
+          clearTimeout(win.reloadTimeout)
+          win.reloadTimeout = setTimeout(() => {
+            console.log('Reloading window...')
+            win.reload()
+          }, 100)
+        }
+      }
+    })
+  }
+}
 
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
@@ -23,13 +73,13 @@ function createWindow() {
 
   // Load the local index.html
   if (isDev) {
-    win.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:5173')
   } else {
-    win.loadFile(path.join(__dirname, 'dist', 'index.html'))
+    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'))
   }
 
   // Open DevTools automatically
-  win.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 
   // Create the application menu
   const template = [
@@ -55,6 +105,8 @@ app.whenReady().then(() => {
   ipcMain.handle('ping', () => 'pong')
   ipcMain.handle('github:login', async () => {
     try {
+      const { createOAuthDeviceAuth } = await import('@octokit/auth-oauth-device')
+
       const auth = createOAuthDeviceAuth({
         clientId: CLIENT_ID,
         scopes: ['repo', 'user'],
@@ -114,6 +166,24 @@ app.whenReady().then(() => {
     } catch {
       authData = null
       return { isLoggedIn: false }
+    }
+  })
+
+  ipcMain.handle('workspace:openFolder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Select Workspace Folder'
+    })
+
+    if (!result.canceled) {
+      return {
+        success: true,
+        path: result.filePaths[0]
+      }
+    }
+    return {
+      success: false,
+      path: null
     }
   })
 

@@ -1,69 +1,92 @@
 <template>
-  <div class="container is-max-desktop">
-    <h1>👋Hello from Moly!</h1>
-    <nav class="level">
-      <div class="level-item has-text-centered">
-        <div>
-          <p class="heading">Posts</p>
-          <p class="title">{{ stats.posts }}</p>
-        </div>
+  <div class="app-container">
+    <!-- Left Sidebar Navigation -->
+    <transition name="slide">
+      <Navbar v-if="showNavbar" @hide-navbar="toggleNavbar" />
+    </transition>
+
+    <!-- Toggle button when navbar is hidden -->
+    <button v-if="!showNavbar" class="button is-small navbar-toggle" @click="toggleNavbar" aria-label="Show navigation">
+      <span class="icon">
+        <i class="fas fa-bars"></i>
+      </span>
+    </button>
+
+    <!-- Main Content Area -->
+    <main class="main-content" :class="{ 'full-width': !showNavbar }">
+      <div class="container">
+        <router-view></router-view>
       </div>
-      <div class="level-item has-text-centered">
-        <div>
-          <p class="heading">Drafts</p>
-          <p class="title">{{ stats.drafts }}</p>
-        </div>
-      </div>
-    </nav>
-    <div class="level-right">
-      <GitHubLogin />
-    </div>
-    <p id="info">{{ versionInfo }}</p>
-    <div class="editor-wrapper">
-      <MarkdownEditor ref="editor" :initial-content="initialContent" :autosave="true" @change="handleEditorChange"
-        @save="handleEditorSave" />
-    </div>
-    <div class="buttons mt-3">
-      <button class="button is-primary" @click="handlePublish">Publish</button>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
-import MarkdownEditor from './components/MarkdownEditor.vue'
-import GitHubLogin from './components/GitHubLogin.vue'
+import { ref } from 'vue'
+import Navbar from './components/Navbar.vue'
 
-const editor = ref(null)
-const versionInfo = ref('')
-const initialContent = "# Welcome to Moly Blogger\n\nStart writing your blog post here..."
-const stats = reactive({
-  posts: 3456,
-  drafts: 123
-})
+const showNavbar = ref(true)
 
-onMounted(() => {
-  versionInfo.value = `Using Chrome (v${versions.chrome()}), Node.js (v${versions.node()}), and Electron (v${versions.electron()})`
-})
-
-const handleEditorChange = (content) => {
-  console.log('Content changed:', content)
-}
-
-const handleEditorSave = (content) => {
-  console.log('Auto-saving content:', content)
-}
-
-const handlePublish = () => {
-  const content = editor.value.getContent()
-  console.log('Publishing content:', content)
+const toggleNavbar = () => {
+  showNavbar.value = !showNavbar.value
 }
 </script>
 
 <style scoped>
-.editor-wrapper {
-  height: 70vh;
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+  margin-left: 0;
+}
+
+.navbar-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 30;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #485fc7;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.navbar-toggle:hover {
+  background-color: #3e55b9;
+  transform: scale(1.05);
+}
+
+/* Transition animations */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-100%);
+}
+
+.container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0 1rem;
 }
 </style>
