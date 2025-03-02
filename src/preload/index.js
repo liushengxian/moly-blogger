@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer, shell } = require('electron')
 const { exec, spawn } = require('child_process')
+const fs = require('fs').promises
 
 contextBridge.exposeInMainWorld('api', {
   runCommand: (command, args = [], options = {}) => {
@@ -31,17 +32,17 @@ contextBridge.exposeInMainWorld('api', {
   checkRunningProcess: (processName) => {
     return new Promise((resolve, reject) => {
       exec(`ps aux | grep '${processName}' | grep -v grep`, (error, stdout, stderr) => {
-        // console.log(`stdout: ${stdout}`);
-        // console.error(`stderr: ${stderr}`);
-        // console.log(`error: ${error}`);
-        // if (error) {
-        //   console.error(`Error checking running process: ${stderr}`)
-        //   reject(error)
-        // } else {
-        resolve(stdout)
-        // }
+        if (error) {
+          console.error(`Error checking running process: ${stderr}`)
+          reject(error)
+        } else {
+          resolve(stdout)
+        }
       })
     })
+  },
+  writeFile: (filePath, content) => {
+    return fs.writeFile(filePath, content, 'utf8')
   }
 })
 

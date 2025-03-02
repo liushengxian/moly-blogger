@@ -23,20 +23,14 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="buttons mt-3">
+    <!-- <div class="buttons mt-3">
       <button class="button is-primary" @click="handlePublish">
         <span class="icon">
           <i class="fas fa-upload"></i>
         </span>
         <span>Publish</span>
       </button>
-      <button class="button is-info is-light" @click="handleSave">
-        <span class="icon">
-          <i class="fas fa-save"></i>
-        </span>
-        <span>Save Draft</span>
-      </button>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -85,18 +79,20 @@ const handleEditorChange = (content) => {
   status.value = 'Draft'
 }
 
-const handleEditorSave = (content) => {
-  console.log('Auto-saving content:', content)
-  status.value = 'Saved'
-  lastSaved.value = new Date()
-}
-
-const handleSave = async () => {
+const handleEditorSave = async (content) => {
   try {
-    const content = editor.value.getContent()
-    await handleEditorSave(content)
+    const filePath = route.query.path
+    if (filePath) {
+      await window.api.writeFile(filePath, content)
+      console.log('File saved:', filePath)
+      status.value = 'Saved'
+      lastSaved.value = new Date()
+    } else {
+      console.error('File path is not set')
+      status.value = 'Error'
+    }
   } catch (error) {
-    console.error('Failed to save:', error)
+    console.error('Failed to save file:', error)
     status.value = 'Error'
   }
 }

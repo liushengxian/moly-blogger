@@ -71,7 +71,7 @@ const loadWorkspaceFiles = async () => {
 
   console.log("load workspace files", workspacePath.value)
 
-  const result = await window.workspace.readDir(workspacePath.value)
+  const result = await window.workspace.readDir(`${workspacePath.value}/content`)
   if (result.length > 0) {
     fileTree.value = result;
     // result.sort((a, b) => {

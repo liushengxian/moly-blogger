@@ -155,7 +155,7 @@ app.whenReady().then(() => {
         path: path.join(folderPath, file.name),
         name: file.name
       }))
-      return items
+      return items.filter(item => item.isDirectory || item.name.endsWith('.md'))
     } catch (error) {
       console.error('Failed to read directory:', error)
       return []
