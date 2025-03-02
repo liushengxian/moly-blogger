@@ -40,6 +40,8 @@ router.beforeEach((to, from, next) => {
   const store = useStore()
   const workspacePath = store.getters['workspace/workspacePath']
 
+  console.log("workspacePath", workspacePath, to.meta.requiresWorkspace)
+
   if (to.meta.requiresWorkspace && !workspacePath) {
     next('/')
   } else if (to.path === '/' && workspacePath) {

@@ -74,8 +74,8 @@ const handlePublish = () => {
 const openWorkspace = async () => {
   try {
     const result = await window.workspace.openFolder()
-    if (result.success) {
-      store.dispatch('workspace/setWorkspacePath', result.path)
+    if (result) {
+      store.dispatch('workspace/setWorkspacePath', result)
     }
   } catch (error) {
     console.error('Failed to open workspace:', error)

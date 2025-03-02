@@ -52,18 +52,26 @@ const store = useStore()
 const router = useRouter()
 const recentWorkspaces = ref([])
 
-const loadRecentWorkspaces = async () => {
-  const result = await window.database.getWorkspaces()
-  if (result.success) {
-    recentWorkspaces.value = result.workspaces
+const loadRecentWorkspaces = () => {
+  const workspaces = JSON.parse(localStorage.getItem('recentWorkspaces')) || []
+  recentWorkspaces.value = workspaces
+}
+
+const saveWorkspaceToLocalStorage = (workspace) => {
+  const workspaces = JSON.parse(localStorage.getItem('recentWorkspaces')) || []
+  if (!workspaces.find(w => w.path === workspace.path)) {
+    workspaces.push(workspace)
+    localStorage.setItem('recentWorkspaces', JSON.stringify(workspaces))
   }
 }
 
 const openWorkspace = async () => {
   try {
     const result = await window.workspace.openFolder()
-    if (result.success) {
-      await selectWorkspace(result.path)
+    if (result) {
+      const workspace = { path: result }
+      saveWorkspaceToLocalStorage(workspace)
+      await selectWorkspace(result)
     }
   } catch (error) {
     console.error('Failed to open workspace:', error)
@@ -130,4 +138,4 @@ onMounted(() => {
   background-color: white;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
 }
-</style> 
+</style>

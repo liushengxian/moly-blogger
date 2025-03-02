@@ -2,10 +2,7 @@
   <aside class="menu sidebar">
     <div class="sidebar-header">
       <p class="menu-label">{{ workspaceName }}</p>
-      <button 
-        class="button is-small is-ghost hide-button" 
-        @click="$emit('hide-navbar')"
-        aria-label="Hide navigation">
+      <button class="button is-small is-ghost hide-button" @click="$emit('hide-navbar')" aria-label="Hide navigation">
         <span class="icon">
           <i class="fas fa-chevron-left"></i>
         </span>
@@ -19,13 +16,10 @@
       </div>
       <div v-else>
         <div class="file-tree">
-          <template v-for="item in fileTree" :key="item.path">
-            <FileTreeItem 
-              :item="item" 
-              :current-file="currentFile"
-              @select="handleFileSelect" 
-            />
-          </template>
+          <div class="file-tree-scroll">
+            <FileTreeItem v-for="item in fileTree" :key="item.path" :item="item" :current-file="currentFile"
+              @select="handleSelect" @open-file="handleOpenFile" />
+          </div>
         </div>
       </div>
     </div>
@@ -40,45 +34,61 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
-import path from 'path'
+import { useRouter } from 'vue-router'
 import FileTreeItem from './FileTreeItem.vue'
 
 const store = useStore()
+const router = useRouter()
 const versionInfo = ref('')
 const fileTree = ref([])
 
 const workspacePath = computed(() => store.getters['workspace/workspacePath'])
 const currentFile = computed(() => store.getters['workspace/currentFile'])
-const workspaceName = computed(() => 
-  workspacePath.value ? path.basename(workspacePath.value) : 'Moly Blogger'
+const editorContent = ref('')
+const workspaceName = computed(() =>
+  // workspacePath.value ? path.basename(workspacePath.value) :
+  'Moly Blogger'
 )
+
+const handleSelect = (path) => {
+  currentFile.value = path
+}
+
+const handleOpenFile = ({ path, content }) => {
+  currentFile.value = path
+  editorContent.value = content
+  router.push('/editor')
+}
 
 const loadWorkspaceFiles = async () => {
   if (!workspacePath.value) return
-  
+
+  console.log("load workspace files", workspacePath.value)
+
   const result = await window.workspace.readDir(workspacePath.value)
-  if (result.success) {
-    fileTree.value = result.items.sort((a, b) => {
-      // Directories first, then files
-      if (a.isDirectory !== b.isDirectory) {
-        return a.isDirectory ? -1 : 1
-      }
-      // Then alphabetically
-      return a.name.localeCompare(b.name)
-    })
+  if (result.length > 0) {
+    fileTree.value = result;
+    // result.sort((a, b) => {
+    //   // Directories first, then files
+    //   if (a.isDirectory !== b.isDirectory) {
+    //     return a.isDirectory ? -1 : 1
+    //   }
+    //   // Then alphabetically
+    //   return a.name.localeCompare(b.name)
+    // })
   }
 }
 
 const handleFileSelect = async (filePath) => {
-  if (await window.workspace.isMarkdown(filePath)) {
-    const result = await window.workspace.readFile(filePath)
-    if (result.success) {
-      store.dispatch('workspace/openFile', {
-        path: filePath,
-        content: result.content
-      })
-    }
-  }
+  // if (await window.workspace.isMarkdown(filePath)) {
+  //   const result = await window.workspace.readFile(filePath)
+  //   if (result.success) {
+  //     store.dispatch('workspace/openFile', {
+  //       path: filePath,
+  //       content: result.content
+  //     })
+  //   }
+  // }
 }
 
 watch(() => workspacePath.value, loadWorkspaceFiles, { immediate: true })
@@ -127,6 +137,20 @@ defineEmits(['hide-navbar'])
 .hide-button:hover {
   color: #485fc7;
   background-color: rgba(72, 95, 199, 0.1);
+}
+
+.workspace-explorer {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-tree {
+  height: 100%;
+}
+
+.file-tree-scroll {
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .menu-list a {

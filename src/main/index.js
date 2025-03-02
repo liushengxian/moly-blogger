@@ -1,15 +1,13 @@
-const { app, BrowserWindow, ipcMain, Menu, protocol, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
+const fs = require('fs').promises
 require('dotenv').config()
 const isDev = process.env.NODE_ENV === 'development'
-const DatabaseService = require('./src/services/database')
-const fs = require('fs')
 
 // Use environment variable for CLIENT_ID
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID
 let authData = null
 let mainWindow = null
-const db = new DatabaseService()
 
 // Validate required environment variables
 if (!CLIENT_ID) {
@@ -43,65 +41,37 @@ function handleUrl(url) {
   }
 }
 
-// Add this function to watch for file changes
-function watchForChanges(win) {
-  if (isDev) {
-    // Watch the dist directory for changes
-    require('fs').watch(path.join(__dirname, 'dist'), (eventType, filename) => {
-      if (filename) {
-        // Debounce the reload to prevent multiple reloads
-        if (win && win.webContents) {
-          clearTimeout(win.reloadTimeout)
-          win.reloadTimeout = setTimeout(() => {
-            console.log('Reloading window...')
-            win.reload()
-          }, 100)
-        }
-      }
-    })
-  }
-}
-
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
+      preload: path.join(__dirname, '../preload/index.js'),
+      nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true,
-      preload: path.join(__dirname, 'preload.js')
+      webSecurity: false
     }
   })
 
-  // Load the local index.html
+  // For debugging preload script path
+  // console.log('Preload script path:', path.join(__dirname, 'preload.js'))
+
+  // Load the index.html
+  console.log("is Dev: ", isDev)
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:5173') // Default Vite dev server URL
   } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../../dist', 'index.html'))
   }
 
-  // Open DevTools automatically
+  // Open the DevTools.
   mainWindow.webContents.openDevTools()
 
-  // Create the application menu
-  const template = [
-    {
-      label: 'View',
-      submenu: [
-        {
-          label: 'Toggle Developer Tools',
-          accelerator: process.platform === 'darwin' ? 'Command+Option+I' : 'Control+Shift+I',
-          click(item, focusedWindow) {
-            if (focusedWindow) focusedWindow.webContents.toggleDevTools();
-          }
-        }
-      ]
-    }
-  ];
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load preload script:', errorDescription)
+  })
 
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
+  return mainWindow
 }
 
 app.whenReady().then(() => {
@@ -173,82 +143,38 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('workspace:openFolder', async () => {
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory'],
-      title: 'Select Workspace Folder'
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
     })
-
-    if (!result.canceled) {
-      return {
-        success: true,
-        path: result.filePaths[0]
-      }
-    }
-    return {
-      success: false,
-      path: null
-    }
+    return result.filePaths[0]
   })
 
-  ipcMain.handle('database:addWorkspace', async (_, path) => {
+  ipcMain.handle('workspace:readDir', async (event, folderPath) => {
     try {
-      const result = db.addWorkspace(path)
-      return { success: true, result }
-    } catch (error) {
-      console.error('Failed to add workspace:', error)
-      return { success: false, error: error.message }
-    }
-  })
-
-  ipcMain.handle('database:getWorkspaces', async () => {
-    try {
-      const workspaces = db.getWorkspaces()
-      return { success: true, workspaces }
-    } catch (error) {
-      console.error('Failed to get workspaces:', error)
-      return { success: false, error: error.message }
-    }
-  })
-
-  ipcMain.handle('database:createPost', async (_, title, content, workspacePath) => {
-    try {
-      const result = db.createPost(title, content, workspacePath)
-      return { success: true, result }
-    } catch (error) {
-      console.error('Failed to create post:', error)
-      return { success: false, error: error.message }
-    }
-  })
-
-  ipcMain.handle('workspace:readDir', async (_, folderPath) => {
-    try {
-      const items = await fs.promises.readdir(folderPath, { withFileTypes: true })
-      return {
-        success: true,
-        items: items.map(item => ({
-          name: item.name,
-          path: path.join(folderPath, item.name),
-          isDirectory: item.isDirectory(),
-          isFile: item.isFile()
-        }))
-      }
+      const files = await fs.readdir(folderPath, { withFileTypes: true })
+      const items = files.map(file => ({
+        isDirectory: file.isDirectory(),
+        path: path.join(folderPath, file.name),
+        name: file.name
+      }))
+      return items
     } catch (error) {
       console.error('Failed to read directory:', error)
-      return { success: false, error: error.message }
+      return []
     }
   })
 
-  ipcMain.handle('workspace:readFile', async (_, filePath) => {
+  ipcMain.handle('workspace:readFile', async (event, filePath) => {
     try {
-      const content = await fs.promises.readFile(filePath, 'utf-8')
-      return { success: true, content }
+      const content = await fs.readFile(filePath, 'utf-8')
+      return content
     } catch (error) {
       console.error('Failed to read file:', error)
-      return { success: false, error: error.message }
+      return null
     }
   })
 
-  createWindow()
+  mainWindow = createWindow()
 
   // for mac system 
   app.on('activate', () => {

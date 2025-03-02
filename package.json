@@ -2,10 +2,11 @@
   "name": "moly-blogger",
   "version": "1.0.0",
   "description": "blogger for github pages, for moly",
-  "main": "main.js",
+  "main": "src/main/index.js",
   "scripts": {
     "start": "electron-forge start",
     "dev": "vite build --watch",
+    "electron": "electron .",
     "build": "vite build",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",
