@@ -1,12 +1,55 @@
-const { contextBridge, ipcRenderer } = require('electron')
-// const path = require('node:path')
+const { contextBridge, ipcRenderer, shell } = require('electron')
+const { exec, spawn } = require('child_process')
+
+contextBridge.exposeInMainWorld('api', {
+  runCommand: (command, args = [], options = {}) => {
+    return new Promise((resolve, reject) => {
+      const process = spawn(command, args, options)
+
+      process.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`)
+      })
+
+      process.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`)
+      })
+
+      process.on('close', (code) => {
+        if (code === 0) {
+          resolve(`Process exited with code ${code}`)
+        } else {
+          reject(`Process exited with code ${code}`)
+        }
+      })
+
+      process.on('error', (error) => {
+        reject(error)
+      })
+    })
+  },
+  openExternal: (url) => shell.openExternal(url),
+  checkRunningProcess: (processName) => {
+    return new Promise((resolve, reject) => {
+      exec(`ps aux | grep '${processName}' | grep -v grep`, (error, stdout, stderr) => {
+        // console.log(`stdout: ${stdout}`);
+        // console.error(`stderr: ${stderr}`);
+        // console.log(`error: ${error}`);
+        // if (error) {
+        //   console.error(`Error checking running process: ${stderr}`)
+        //   reject(error)
+        // } else {
+        resolve(stdout)
+        // }
+      })
+    })
+  }
+})
 
 contextBridge.exposeInMainWorld('versions', {
   node: () => process.versions.node,
   chrome: () => process.versions.chrome,
   electron: () => process.versions.electron,
   ping: () => ipcRenderer.invoke('ping')
-  // 除函数之外，我们也可以暴露变量
 })
 
 contextBridge.exposeInMainWorld('github', {
@@ -22,6 +65,5 @@ contextBridge.exposeInMainWorld('github', {
 contextBridge.exposeInMainWorld('workspace', {
   openFolder: () => ipcRenderer.invoke('workspace:openFolder'),
   readDir: (folderPath) => ipcRenderer.invoke('workspace:readDir', folderPath),
-  readFile: (filePath) => ipcRenderer.invoke('workspace:readFile', filePath),
-  // isMarkdown: (filePath) => path.extname(filePath).toLowerCase() === '.md'
+  readFile: (filePath) => ipcRenderer.invoke('workspace:readFile', filePath)
 })

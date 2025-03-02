@@ -1,7 +1,7 @@
 <template>
   <aside class="menu sidebar">
     <div class="sidebar-header">
-      <p class="menu-label">{{ workspaceName }}</p>
+      <p class="menu-label" @click="navigateToHome">{{ workspaceName }}</p>
       <button class="button is-small is-ghost hide-button" @click="$emit('hide-navbar')" aria-label="Hide navigation">
         <span class="icon">
           <i class="fas fa-chevron-left"></i>
@@ -26,6 +26,12 @@
 
     <!-- Settings at Bottom -->
     <div class="sidebar-footer">
+      <button class="button is-small is-ghost settings-button" @click="navigateToSettings" aria-label="Settings">
+        <span class="icon">
+          <i class="fas fa-cog"></i>
+        </span>
+        <span>Settings</span>
+      </button>
       <p class="version-info">{{ versionInfo }}</p>
     </div>
   </aside>
@@ -91,6 +97,14 @@ const handleFileSelect = async (filePath) => {
   // }
 }
 
+const navigateToSettings = () => {
+  router.push('/settings')
+}
+
+const navigateToHome = () => {
+  router.push('/')
+}
+
 watch(() => workspacePath.value, loadWorkspaceFiles, { immediate: true })
 
 onMounted(() => {
@@ -124,6 +138,7 @@ defineEmits(['hide-navbar'])
   font-size: 1rem;
   font-weight: bold;
   margin: 0;
+  cursor: pointer;
 }
 
 .hide-button {
@@ -185,6 +200,21 @@ defineEmits(['hide-navbar'])
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid #dbdbdb;
+}
+
+.settings-button {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  color: #666;
+  background: transparent;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.settings-button:hover {
+  color: #485fc7;
+  background-color: rgba(72, 95, 199, 0.1);
 }
 
 .user-profile {

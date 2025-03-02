@@ -20,6 +20,12 @@
           </span>
           <span>Open Workspace</span>
         </button>
+        <button class="button is-success" @click="previewSite">
+          <span class="icon">
+            <i class="fas fa-eye"></i>
+          </span>
+          <span>Preview</span>
+        </button>
       </div>
 
       <!-- Show selected workspace if exists -->
@@ -29,10 +35,9 @@
       </div>
     </div>
 
-    <div class="recent-posts mt-6">
+    <!-- <div class="recent-posts mt-6">
       <h2 class="title is-4">Recent Posts</h2>
       <div class="columns is-multiline">
-        <!-- Placeholder for recent posts -->
         <div class="column is-one-third">
           <div class="box">
             <h3 class="title is-5">Sample Post</h3>
@@ -44,7 +49,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -82,6 +87,25 @@ const openWorkspace = async () => {
   }
 }
 
+const previewSite = async () => {
+  try {
+    const workspacePath = store.getters['workspace/workspacePath']
+    if (workspacePath) {
+      const runningProcess = await window.api.checkRunningProcess('hugo serve')
+      if (runningProcess) {
+        console.log('Hugo serve is already running')
+      } else {
+        await window.api.runCommand('hugo', ['serve'], { cwd: workspacePath })
+      }
+      await window.api.openExternal('http://localhost:1313')
+    } else {
+      console.error('Workspace path is not set')
+    }
+  } catch (error) {
+    console.error('Failed to preview site:', error)
+  }
+}
+
 onMounted(async () => {
   const status = await window.github.checkAuth()
   if (status.isLoggedIn) {
@@ -111,7 +135,7 @@ onMounted(async () => {
 }
 
 .box:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px)
 }
 
 .notification {
