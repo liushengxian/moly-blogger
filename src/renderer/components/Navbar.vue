@@ -57,7 +57,7 @@ const handleSelect = (path) => {
 const handleOpenFile = ({ path, content }) => {
   currentFile.value = path
   editorContent.value = content
-  router.push('/editor')
+  router.push(`/editor?path=${path}`)
 }
 
 const loadWorkspaceFiles = async () => {
@@ -141,7 +141,7 @@ defineEmits(['hide-navbar'])
 
 .workspace-explorer {
   flex: 1;
-  overflow: hidden;
+  overflow-y: scroll;
 }
 
 .file-tree {

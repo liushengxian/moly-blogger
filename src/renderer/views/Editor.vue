@@ -4,12 +4,7 @@
     <div class="article-header mb-4">
       <div class="field is-grouped">
         <div class="control is-expanded">
-          <input 
-            class="input is-medium" 
-            type="text" 
-            v-model="articleTitle" 
-            placeholder="Enter article title..."
-          >
+          <input class="input is-medium" type="text" v-model="articleTitle" placeholder="Enter article title...">
         </div>
         <div class="control">
           <span class="tag" :class="statusClass">
@@ -24,13 +19,7 @@
 
     <!-- Editor -->
     <div class="editor-wrapper">
-      <MarkdownEditor 
-        ref="editor" 
-        :initial-content="initialContent" 
-        :autosave="true" 
-        @change="handleEditorChange"
-        @save="handleEditorSave" 
-      />
+      <MarkdownEditor ref="editor" :autosave="true" @change="handleEditorChange" @save="handleEditorSave" />
     </div>
 
     <!-- Action Buttons -->
@@ -52,15 +41,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useStore } from 'vuex'
 import MarkdownEditor from '../components/MarkdownEditor.vue'
+import path from 'path'
 
 const editor = ref(null)
 const articleTitle = ref('')
 const status = ref('Draft')
 const lastSaved = ref(null)
 
-const initialContent = "# Welcome to Moly Blogger\n\nStart writing your blog post here..."
+const route = useRoute()
+const store = useStore()
+
+const initialContent = computed(() => store.getters['content/initialContent'])
 
 // Compute status class and icon based on current status
 const statusClass = computed(() => {
@@ -117,13 +112,34 @@ const handlePublish = async () => {
     const content = editor.value.getContent()
     console.log('Publishing content:', content)
     // Add your publish logic here
-    
+
     status.value = 'Published'
   } catch (error) {
     console.error('Failed to publish:', error)
     status.value = 'Error'
   }
 }
+
+function getLastPart(url) {
+  const parts = url.split('/')
+  return parts[parts.length - 1]
+}
+
+const loadFileContent = async () => {
+  const filePath = route.query.path
+  if (filePath) {
+    await store.dispatch('content/loadContent', filePath)
+    articleTitle.value = getLastPart(filePath)
+  }
+}
+
+onMounted(() => {
+  loadFileContent()
+})
+
+watch(() => route.query.path, () => {
+  loadFileContent()
+})
 </script>
 
 <style scoped>
@@ -152,7 +168,12 @@ const handlePublish = async () => {
 }
 
 @keyframes fa-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
